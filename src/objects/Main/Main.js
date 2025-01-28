@@ -3,7 +3,7 @@ import { events } from "../../Events.js";
 import { GameObject } from "../../GameObject.js";
 import { Input } from "../../Input.js";
 import { storyFlags } from "../../StoryFlags.js";
-import { Inventory } from "../inventory/Inventory.js";
+import { Inventory } from "../Inventory/Inventory.js";
 import { SpriteTextString } from "../SpriteTextString/SpriteTextString.js";
 
 export class Main extends GameObject{
