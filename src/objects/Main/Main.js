@@ -1,0 +1,90 @@
+import { Camera } from "../../Camera.js";
+import { events } from "../../Events.js";
+import { GameObject } from "../../GameObject.js";
+import { Input } from "../../Input.js";
+import { storyFlags } from "../../StoryFlags.js";
+import { Inventory } from "../inventory/Inventory.js";
+import { SpriteTextString } from "../SpriteTextString/SpriteTextString.js";
+
+export class Main extends GameObject{
+    constructor() {
+        super({});
+        this.level = null;
+        this.input = new Input()
+        this.camera = new Camera()
+    }
+    ready() {
+
+        const inventory = new Inventory
+        this.addChild(inventory)
+        
+        events.on("CHANGE_LEVEL", this, newLevelInstance => {
+            this.setLevel(newLevelInstance)
+        })
+        //launch the text box handler
+        events.on("HERO_REQUEST_ACTION", this, (withObject) => {
+
+            if (typeof withObject.getContent === "function") {
+                const content = withObject.getContent();
+                console.log('content',content)
+
+                if (!content) {
+                    return;
+                }
+
+                // Potentially add a story flag
+                if(content.addsFlag) {
+                    console.log("add flag", content.addsFlag)
+                    storyFlags.add(content.addsFlag)
+                }
+
+                const textbox = new SpriteTextString({
+                    portraitFrame: content.portraitFrame,
+                    string: content.string
+                })
+                this.addChild(textbox);
+                events.emit("START_TEXT_BOX");
+
+                
+                //unsubscribe from the text box after it is destroyed 
+                const endingSub = events.on("END_TEXT_BOX", this, () => {
+                    textbox.destroy();
+                    events.off(endingSub)
+                })
+            }
+
+            
+        })
+    }
+
+    setLevel(newLevelInstance) {
+        //..
+        if (this.level) {
+            this.level.destroy();
+        }
+        this.level = newLevelInstance;
+        this.addChild(this.level)
+    }
+    drawBackground(ctx) {
+        this.level?.background.drawImage(ctx,0,0);
+
+    }
+
+    drawObjects(ctx) {
+        this.children.forEach(child => {
+            if (child.drawLayer !== "HUD") {
+                child.draw(ctx, 0, 0);
+            }
+        })
+    }
+
+    
+    drawForeground(ctx) {
+        this.children.forEach(child => {
+            if (child.drawLayer === "HUD") {
+                child.draw(ctx, 0, 0);
+            }
+        })
+
+    }
+}
